@@ -1,6 +1,7 @@
 package play
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +25,7 @@ func New() controller.Controller {
 		basePath: "https://play.golang.org",
 		Routes: []string{
 			"post;/fmt;Format",
+			"post;/compile;Compile",
 		},
 	}
 }
@@ -51,4 +53,35 @@ func (s *Service) format(src []byte) ([]byte, error) {
 	}
 	defer res.Body.Close()
 	return ioutil.ReadAll(res.Body)
+}
+
+func (s *Service) compile(src []byte) ([]byte, error) {
+	u := make(url.Values)
+	u.Add("body", string(src))
+	u.Add("version", "2")
+	res, err := http.PostForm(s.basePath+"/compile", u)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	return ioutil.ReadAll(res.Body)
+}
+
+func (s *Service) Compile() {
+	r := s.Ctx.Request()
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	nb, err := s.format(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fres := make(map[string]interface{})
+	json.Unmarshal(nb, &fres)
+	o, err := s.compile([]byte(fres["Body"].(string)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.Ctx.Response().Write(o)
 }

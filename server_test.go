@@ -2,6 +2,7 @@ package play
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,7 @@ func TestService(t *testing.T) {
 
 	code := `
 	package main
+	import "fmt"
 	func main(){
 		fmt.Println("hello")
 	}
@@ -33,5 +35,21 @@ func TestService(t *testing.T) {
 	r.ServeHTTP(w, req)
 	if !bytes.Equal(w.Body.Bytes(), ex) {
 		t.Fatal("wrong format response")
+	}
+
+	req, err = http.NewRequest("POST", "/compile", strings.NewReader(code))
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	ex, err = ioutil.ReadFile("expect_compile.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(w.Body.Bytes(), ex) {
+		fmt.Println(w.Body.String())
+		t.Fatal("wrong compile response")
 	}
 }
