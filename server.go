@@ -1,6 +1,7 @@
 package play
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -26,6 +27,7 @@ func New() controller.Controller {
 		Routes: []string{
 			"post;/fmt;Format",
 			"post;/compile;Compile",
+			"post;/share;Share",
 		},
 	}
 }
@@ -84,4 +86,26 @@ func (s *Service) Compile() {
 		log.Fatal(err)
 	}
 	s.Ctx.Response().Write(o)
+}
+
+func (s *Service) Share() {
+	r := s.Ctx.Request()
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	nb, err := s.share(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.Ctx.Response().Write(nb)
+}
+
+func (s *Service) share(src []byte) ([]byte, error) {
+	res, err := http.Post(s.basePath+"/share", "text/plain", bytes.NewReader(src))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	return ioutil.ReadAll(res.Body)
 }

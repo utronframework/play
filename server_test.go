@@ -52,4 +52,14 @@ func TestService(t *testing.T) {
 		fmt.Println(w.Body.String())
 		t.Fatal("wrong compile response")
 	}
+
+	req, err = http.NewRequest("POST", "/share", strings.NewReader(code))
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Body.String() == "" {
+		t.Fatal("expected token")
+	}
 }
