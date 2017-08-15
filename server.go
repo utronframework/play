@@ -11,10 +11,6 @@ import (
 	"github.com/gernest/utron/controller"
 )
 
-// maxSnippetSize value taken from
-// https://github.com/golang/playground/blob/master/app/goplay/share.go
-const maxSnippetSize = 64 * 1024
-
 type Service struct {
 	controller.BaseController
 	basePath string
